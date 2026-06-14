@@ -841,6 +841,13 @@ function getAudioContext() {
   return audioCtx;
 }
 
+// Wrapper that works in both old (callback) and new (promise) Web Audio API
+function decodeAudio(arrayBuffer) {
+  return new Promise((resolve, reject) => {
+    getAudioContext().decodeAudioData(arrayBuffer, resolve, reject);
+  });
+}
+
 function normalizeFilename(name) {
   return name.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
@@ -877,8 +884,7 @@ async function loadCollectionData() {
   for (const entry of myEntries) {
     try {
       const arrayBuffer = await entry.blob.arrayBuffer();
-      const ctx = getAudioContext();
-      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      const audioBuffer = await decodeAudio(arrayBuffer);
       shlokas[entry.shlokaNum] = { fileName: entry.fileName, audioBuffer, segments: entry.segments };
     } catch (e) {
       console.error('Failed to decode saved audio for shloka', entry.shlokaNum, e);
@@ -940,8 +946,7 @@ async function handleAudioFiles(event) {
     }
     try {
       const arrayBuffer = await file.arrayBuffer();
-      const ctx = getAudioContext();
-      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      const audioBuffer = await decodeAudio(arrayBuffer);
       const segments = detectSegments(audioBuffer);
       shlokas[shlokaNum] = { fileName: file.name, audioBuffer, segments };
       await dbPut('shlokas', {
@@ -1315,6 +1320,7 @@ async function startSession() {
   const loaded = Object.keys(shlokas).map(n => parseInt(n, 10)).sort((a, b) => a - b);
   if (loaded.length === 0) { setStatus('Please upload at least one shloka recording first.', 'idle'); return; }
 
+  await getAudioContext().resume();
   const micOk = await ensureMicAccess();
   if (!micOk) {
     setStatus('Microphone access was not granted — continuing without playback of your repetitions.', 'idle');
@@ -1385,15 +1391,13 @@ function playSegment(shlokaNum, segIdx, onEnded) {
   const ctx = getAudioContext();
   const shloka = shlokas[shlokaNum];
   const seg = shloka.segments[segIdx];
-  ctx.resume().then(() => {
-    const source = ctx.createBufferSource();
-    source.buffer = shloka.audioBuffer;
-    source.connect(ctx.destination);
-    activeSource = source;
-    const duration = Math.max(0.05, seg.end - seg.start);
-    source.onended = () => { if (activeSource === source) activeSource = null; onEnded(); };
-    source.start(0, seg.start, duration);
-  });
+  const source = ctx.createBufferSource();
+  source.buffer = shloka.audioBuffer;
+  source.connect(ctx.destination);
+  activeSource = source;
+  const duration = Math.max(0.05, seg.end - seg.start);
+  source.onended = () => { if (activeSource === source) activeSource = null; onEnded(); };
+  source.start(0, seg.start, duration);
 }
 
 // Play the entire shloka from first segment start to last segment end
@@ -1403,15 +1407,13 @@ function playFullShloka(shlokaNum, onEnded) {
   const segs = shloka.segments;
   const start = segs[0].start;
   const end = segs[segs.length - 1].end;
-  ctx.resume().then(() => {
-    const source = ctx.createBufferSource();
-    source.buffer = shloka.audioBuffer;
-    source.connect(ctx.destination);
-    activeSource = source;
-    const duration = Math.max(0.05, end - start);
-    source.onended = () => { if (activeSource === source) activeSource = null; onEnded(); };
-    source.start(0, start, duration);
-  });
+  const source = ctx.createBufferSource();
+  source.buffer = shloka.audioBuffer;
+  source.connect(ctx.destination);
+  activeSource = source;
+  const duration = Math.max(0.05, end - start);
+  source.onended = () => { if (activeSource === source) activeSource = null; onEnded(); };
+  source.start(0, start, duration);
 }
 
 // Return the effective sub-mode for the current step
