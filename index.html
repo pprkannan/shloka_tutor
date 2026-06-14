@@ -1206,30 +1206,8 @@ function updateShlokaPreview() {
 // ===================================================================
 // Verse banner — shows current shloka text at the top
 // ===================================================================
-function updateVerseBanner(activeSegIdx) {
-  const banner = document.getElementById('verseBanner');
-  if (currentShlokaNum === null || !shlokaTexts[currentShlokaNum]) {
-    banner.classList.add('hidden');
-    return;
-  }
-  const t = shlokaTexts[currentShlokaNum];
-  banner.classList.remove('hidden');
-  document.getElementById('verseBannerLabel').textContent = `Shloka ${currentShlokaNum}`;
-
-  // Split Sanskrit into lines and highlight the active one if provided
-  const sanskritLines = (t.sanskrit || '').split('\n');
-  const sanskritEl = document.getElementById('verseBannerSanskrit');
-  if (activeSegIdx !== undefined && activeSegIdx >= 0 && activeSegIdx < sanskritLines.length) {
-    sanskritEl.innerHTML = sanskritLines.map((l, i) =>
-      i === activeSegIdx
-        ? `<span class="active-line">${escapeHtml(l)}</span>`
-        : escapeHtml(l)
-    ).join('\n');
-  } else {
-    sanskritEl.textContent = t.sanskrit || '';
-  }
-
-  document.getElementById('verseBannerEnglish').textContent = t.english || '';
+function updateVerseBanner() {
+  // verse banner was removed from the UI — nothing to update
 }
 
 // ===================================================================
