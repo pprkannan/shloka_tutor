@@ -450,12 +450,6 @@
         Upload audio for one or more shlokas below, then press Start.
       </div>
 
-      <!-- Preview text for the selected shloka -->
-      <div id="shlokaPreviewBox" class="hidden" style="background:#fff8ec;border-radius:10px;padding:12px 14px;margin-bottom:14px;text-align:left;">
-        <div id="shlokaPreviewSanskrit" style="font-size:16px;color:#5a2e0a;line-height:1.75;white-space:pre-wrap;"></div>
-        <div id="shlokaPreviewEnglish" style="font-size:12px;color:#6b5440;line-height:1.6;white-space:pre-wrap;font-style:italic;margin-top:6px;"></div>
-      </div>
-
       <div class="controls">
         <button class="btn-primary" id="startBtn" onclick="startSession()">Start</button>
         <button class="btn-secondary" id="pauseBtn" onclick="togglePause()" disabled>Pause</button>
@@ -473,7 +467,7 @@
 
       <div class="setup-row">
         <label for="startShlokaInput">Start from shloka #</label>
-        <input type="number" id="startShlokaInput" min="1" value="1" oninput="updateShlokaPreview()">
+        <input type="number" id="startShlokaInput" min="1" value="1">
       </div>
       <div class="setup-row">
         <label for="paceSelect">Extra time after audio ends:</label>
@@ -836,6 +830,7 @@ let mediaRecorder = null;
 let micStream = null;
 let recordedChunks = [];
 let micPermissionGranted = false;
+let stepToken = 0; // incremented each runStep; stale callbacks check this and bail
 
 function getAudioContext() {
   if (!audioCtx) {
@@ -1341,6 +1336,7 @@ function restartSession() {
   }
   isRunning = false; isPaused = false;
   currentShlokaNum = null; currentSegmentIdx = 0; cycleStep = 0; fullPhase = 1;
+  stepToken++; // invalidate any in-flight callbacks
   const startBtn = document.getElementById('startBtn');
   const pauseBtn = document.getElementById('pauseBtn');
   if (startBtn) { startBtn.disabled = false; startBtn.textContent = 'Start'; }
@@ -1411,26 +1407,29 @@ function repeatCount(subMode) {
 function runStep() {
   if (isPaused || !isRunning) return;
   clearTimer();
+  stopActiveSource();
+  const myToken = ++stepToken;
+  const guard = (fn) => (...args) => { if (stepToken === myToken && isRunning && !isPaused) fn(...args); };
+
   setPositionLabel();
 
   const subMode = effectiveSubMode();
   const shloka = shlokas[currentShlokaNum];
   const totalSegs = shloka.segments.length;
 
-  // ── SHLOKA mode: play entire shloka, then 1 repeat ──
+  // ── SHLOKA mode: play entire shloka, then repeats ──
   if (subMode === 'shloka') {
     updateVerseBanner();
     const segs = shloka.segments;
     const shlokaDuration = segs[segs.length - 1].end - segs[0].start;
     if (cycleStep === 0) {
       setStatus(`🎧 Listen — Shloka ${currentShlokaNum} (full)`, 'listen');
-      playFullShloka(currentShlokaNum, () => {
-        if (isPaused || !isRunning) return;
+      playFullShloka(currentShlokaNum, guard(() => {
         cycleStep = 1;
         runStep();
-      });
+      }));
     } else {
-      runRepeatTurn(subMode, shlokaDuration, () => advanceSegment());
+      runRepeatTurn(subMode, shlokaDuration, myToken, () => advanceSegment());
     }
     return;
   }
@@ -1442,20 +1441,19 @@ function runStep() {
 
   if (cycleStep === 0) {
     const modeTag = subMode === 'split' ? 'Split' : 'Line';
-    setStatus(`🎧 Listen — Shloka ${currentShlokaNum}, Segment ${currentSegmentIdx + 1} of ${totalSegs} (${modeTag})`, 'listen');
-    playSegment(currentShlokaNum, currentSegmentIdx, () => {
-      if (isPaused || !isRunning) return;
+    setStatus(`🎧 Listen — Shloka ${currentShlokaNum}, segment ${currentSegmentIdx + 1} of ${totalSegs}`, 'listen');
+    playSegment(currentShlokaNum, currentSegmentIdx, guard(() => {
       if (seg.skipRepeat) {
         advanceSegment();
       } else {
         cycleStep = 1;
         runStep();
       }
-    });
+    }));
   } else {
     const maxRepeats = repeatCount(subMode);
     if (cycleStep <= maxRepeats) {
-      runRepeatTurn(subMode, segDuration, () => {
+      runRepeatTurn(subMode, segDuration, myToken, () => {
         if (cycleStep < maxRepeats) {
           cycleStep++;
           runStep();
@@ -1467,11 +1465,11 @@ function runStep() {
   }
 }
 
-function runRepeatTurn(subMode, segDurationSec, onDone) {
+function runRepeatTurn(subMode, segDurationSec, token, onDone) {
   const maxRepeats = subMode === 'shloka' ? 1 : repeatCount(subMode);
   const count = Math.max(2, Math.ceil(segDurationSec) + getBuffer());
   const label = subMode === 'shloka' ? '1/1' : `${cycleStep}/${maxRepeats}`;
-  setStatus(`🗣️ Your turn (${label})`, 'repeat', count);
+  setStatus(`🗣️ Your turn — repeat what you just heard (${label})`, 'repeat', count);
   startRecording();
   let remaining = count;
   timer = setInterval(() => {
@@ -1482,7 +1480,7 @@ function runRepeatTurn(subMode, segDurationSec, onDone) {
     if (remaining <= 0) {
       clearInterval(timer); timer = null;
       stopRecordingAndPlayback(() => {
-        if (isPaused || !isRunning) return;
+        if (stepToken !== token || !isRunning || isPaused) return;
         onDone();
       });
     }
