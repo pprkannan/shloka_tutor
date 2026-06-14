@@ -30,6 +30,45 @@
     font-style: italic;
   }
 
+  /* ── Verse banner ── */
+  .verse-banner {
+    background: #fff8ec;
+    border: 1.5px solid #e0c9a6;
+    border-radius: 14px;
+    padding: 14px 18px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(139,69,19,0.07);
+  }
+  .verse-banner.hidden { display: none !important; }
+  .verse-banner-label {
+    font-size: 11px;
+    color: #c9881a;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .verse-banner .sanskrit-text {
+    font-size: 16px;
+    color: #5a2e0a;
+    line-height: 1.75;
+    white-space: pre-wrap;
+  }
+  .verse-banner .english-text {
+    font-size: 12px;
+    color: #6b5440;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    font-style: italic;
+    margin-top: 6px;
+  }
+  /* highlight active line */
+  .verse-banner .sanskrit-text .active-line {
+    background: #fde9bc;
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin: -1px -4px;
+  }
+
   .collection-list {
     display: flex;
     flex-direction: column;
@@ -141,7 +180,7 @@
     padding: 2rem;
     box-shadow: 0 4px 20px rgba(139, 69, 19, 0.1);
     text-align: center;
-    min-height: 220px;
+    min-height: 180px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -153,29 +192,6 @@
     text-transform: uppercase;
     letter-spacing: 2px;
     margin-bottom: 12px;
-  }
-  .shloka-text {
-    background: #fff8ec;
-    border-radius: 10px;
-    padding: 14px;
-    margin-bottom: 14px;
-    text-align: left;
-    max-height: 160px;
-    overflow-y: auto;
-  }
-  .shloka-text .sanskrit-text {
-    font-size: 17px;
-    color: #5a2e0a;
-    line-height: 1.7;
-    margin-bottom: 6px;
-    white-space: pre-wrap;
-  }
-  .shloka-text .english-text {
-    font-size: 13px;
-    color: #6b5440;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    font-style: italic;
   }
   .status {
     font-size: 16px;
@@ -192,9 +208,9 @@
   }
   .status.listen { background: #fff3e0; color: #c9881a; }
   .status.repeat { background: #e8f5e9; color: #2e7d32; }
-  .status.pause { background: #f3e5f5; color: #7b1fa2; }
-  .status.done { background: #e3f2fd; color: #1565c0; }
-  .status.idle { background: #f7f0e6; color: #a87a4f; }
+  .status.pause  { background: #f3e5f5; color: #7b1fa2; }
+  .status.done   { background: #e3f2fd; color: #1565c0; }
+  .status.idle   { background: #f7f0e6; color: #a87a4f; }
 
   .countdown {
     font-size: 36px;
@@ -238,6 +254,36 @@
     border: 1px solid #e0c9a6;
     background: white;
     color: #4a2c12;
+  }
+
+  /* mode pills */
+  .mode-row {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+  }
+  .mode-btn {
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 20px;
+    background: #f0e0c8;
+    color: #8b4513;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .mode-btn.active {
+    background: #c9881a;
+    color: white;
+    border-color: #8b5e10;
+  }
+  .mode-label {
+    font-size: 12px;
+    color: #a87a4f;
+    margin-top: 6px;
+    font-style: italic;
   }
 
   .audio-section {
@@ -398,12 +444,15 @@
       <span class="collection-title" id="collectionTitle"></span>
     </div>
 
+    <!-- Verse banner — always visible at top when a shloka is active -->
+    <div class="verse-banner hidden" id="verseBanner">
+      <div class="verse-banner-label" id="verseBannerLabel">Shloka —</div>
+      <div class="sanskrit-text" id="verseBannerSanskrit"></div>
+      <div class="english-text" id="verseBannerEnglish"></div>
+    </div>
+
     <div class="card">
       <div class="position-label" id="positionLabel">Not started</div>
-      <div class="shloka-text hidden" id="shlokaTextBox">
-        <div class="sanskrit-text" id="sanskritText"></div>
-        <div class="english-text" id="englishText"></div>
-      </div>
       <div class="status idle" id="status">
         Upload audio for one or more shlokas below, then press Start.
       </div>
@@ -413,6 +462,15 @@
         <button class="btn-secondary" id="pauseBtn" onclick="togglePause()" disabled>Pause</button>
         <button class="btn-secondary" id="restartBtn" onclick="restartSession()">Restart</button>
       </div>
+
+      <!-- Practice mode selector -->
+      <div class="mode-row">
+        <button class="mode-btn active" id="modeSplit"  onclick="setMode('split')">Split</button>
+        <button class="mode-btn"        id="modeLine"   onclick="setMode('line')">Line</button>
+        <button class="mode-btn"        id="modeShloka" onclick="setMode('shloka')">Shloka</button>
+        <button class="mode-btn"        id="modeFull"   onclick="setMode('full')">Full sequence</button>
+      </div>
+      <div class="mode-label" id="modeDesc">Split: each segment, repeat twice</div>
 
       <div class="setup-row">
         <label for="startShlokaInput">Start from shloka #</label>
@@ -429,7 +487,7 @@
     </div>
 
     <div class="audio-section">
-      <div class="audio-label"><strong>Upload audio per shloka.</strong> Name the file so it includes the shloka number (e.g. <code>shloka4.mp3</code>, <code>shloka40.m4a</code>). You can select multiple files at once. Each file is analyzed automatically to split it into name-segments using silence detection. Saved on this device for next time.</div>
+      <div class="audio-label"><strong>Upload audio per shloka.</strong> Name the file so it includes the shloka number (e.g. <code>shloka4.mp3</code>, <code>shloka40.m4a</code>). You can select multiple files at once. Each file is analyzed automatically to split it into segments using silence detection. Saved on this device for next time.</div>
       <div class="audio-row">
         <span>Audio:</span>
         <input type="file" id="audioUpload" multiple onchange="handleAudioFiles(event)">
@@ -443,7 +501,7 @@
 
       <div class="shloka-list" id="shlokaList"></div>
 
-      <div class="audio-label" style="margin-top:16px;"><strong>Upload text (optional).</strong> A .txt, .docx, or .pdf file containing the shlokas, each marked with its number (e.g. "1.", "Shloka 1", "॥1॥"). The matching shloka's text is shown during practice.</div>
+      <div class="audio-label" style="margin-top:16px;"><strong>Upload text (optional).</strong> A .txt, .docx, or .pdf file containing the shlokas, each marked with its number (e.g. "1.", "Shloka 1", "॥1॥"). The matching shloka's text is shown at the top during practice.</div>
       <div class="audio-row">
         <span>Text:</span>
         <input type="file" id="textUpload" accept=".txt,.docx,.pdf" onchange="handleTextFile(event)">
@@ -453,11 +511,14 @@
     </div>
 
     <div class="info-box">
-      <strong>How this works:</strong> upload one audio recording per shloka (named so the filename includes the shloka number). Each recording is split automatically into segments — one per name — by detecting brief pauses in the chanting. Set "Start from shloka #" to wherever you want to begin (e.g. 4 or 40), then press Start. For each segment, the app plays it once (Listen), then gives you 3 timed pauses to repeat it aloud, then moves to the next segment — and on to the next shloka's audio once one is loaded. Use Pause/Resume to take a break, and Restart to go back to the beginning of the selected starting shloka.<br><br>
-      <strong>Very short segments</strong> (under 0.6s, e.g. a standalone "Om") play once with no repeat pauses.<br><br>
-      <strong>Hear yourself:</strong> on Start, the app asks for microphone access. During each "Your turn" pause it records you, then plays it back immediately afterward so you can hear your own chanting. If you decline microphone access, the session continues without playback.<br><br>
-      <strong>Saved on this device:</strong> audio and text you upload are stored in this browser's local storage (IndexedDB) so they're available next time, without re-uploading. They are not uploaded anywhere else.<br><br>
-      <strong>Note on segmentation:</strong> silence-based splitting is approximate — if a shloka splits into too many or too few segments, try adjusting the sensitivity slider and re-uploading that file.
+      <strong>Practice modes:</strong><br>
+      <strong>Split</strong> — each audio segment is played; you repeat it twice.<br>
+      <strong>Line</strong> — each full segment/line is played; you repeat it once.<br>
+      <strong>Shloka</strong> — the entire shloka plays at once; you repeat it once.<br>
+      <strong>Full sequence</strong> — for each shloka, runs all three phases in order: split (2 repeats each) → line (1 repeat each) → whole shloka (1 repeat).<br><br>
+      <strong>How to use:</strong> upload one audio recording per shloka (named so the filename includes the shloka number). Choose a practice mode, set "Start from shloka #" if needed, then press Start. The current shloka's verses are always shown at the top.<br><br>
+      <strong>Hear yourself:</strong> on Start, the app asks for microphone access. During each "Your turn" pause it records you and plays it back immediately so you can hear your own chanting.<br><br>
+      <strong>Saved on this device:</strong> audio and text you upload are stored in this browser's local storage (IndexedDB) so they're available next time, without re-uploading.
     </div>
   </div>
 
@@ -480,11 +541,9 @@ function openDB() {
         database.createObjectStore('collections', { keyPath: 'id' });
       }
       if (!database.objectStoreNames.contains('shlokas')) {
-        // key: `${collectionId}:${shlokaNum}`
         database.createObjectStore('shlokas', { keyPath: 'key' });
       }
       if (!database.objectStoreNames.contains('texts')) {
-        // key: collectionId, value: { collectionId, shlokaTexts: {num: {sanskrit, english}} }
         database.createObjectStore('texts', { keyPath: 'collectionId' });
       }
     };
@@ -533,7 +592,6 @@ function dbDelete(storeName, key) {
   });
 }
 
-// Delete all shloka entries belonging to a collection
 async function dbDeleteCollectionShlokas(collectionId) {
   const all = await dbGetAll('shlokas');
   const toDelete = all.filter(s => s.key.startsWith(collectionId + ':'));
@@ -545,14 +603,13 @@ async function dbDeleteCollectionShlokas(collectionId) {
 // ===================================================================
 // App state & navigation
 // ===================================================================
-let currentCollection = null; // {id, name}
+let currentCollection = null;
 
 function genId() {
   return 'col_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
 }
 
 async function goHome() {
-  // Stop any running session and release resources
   if (typeof restartSession === 'function') {
     try { restartSession(); } catch (e) {}
   }
@@ -638,7 +695,7 @@ async function openCollection(col) {
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]); // strip "data:...;base64,"
+    reader.onload = () => resolve(reader.result.split(',')[1]);
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
@@ -657,35 +714,23 @@ async function exportBackup() {
   const status = document.getElementById('backupStatus');
   status.textContent = 'Preparing backup...';
   status.classList.add('empty');
-
   try {
     const collections = await dbGetAll('collections');
     const shlokaEntries = await dbGetAll('shlokas');
     const textEntries = await dbGetAll('texts');
-
     const exportShlokas = [];
     for (const entry of shlokaEntries) {
       const base64 = await blobToBase64(entry.blob);
       exportShlokas.push({
-        key: entry.key,
-        collectionId: entry.collectionId,
-        shlokaNum: entry.shlokaNum,
-        fileName: entry.fileName,
-        mimeType: entry.blob.type || 'audio/mpeg',
-        base64: base64,
-        segments: entry.segments
+        key: entry.key, collectionId: entry.collectionId,
+        shlokaNum: entry.shlokaNum, fileName: entry.fileName,
+        mimeType: entry.blob.type || 'audio/mpeg', base64, segments: entry.segments
       });
     }
-
     const backup = {
-      app: 'shloka-tutor',
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      collections: collections,
-      shlokas: exportShlokas,
-      texts: textEntries
+      app: 'shloka-tutor', version: 1, exportedAt: new Date().toISOString(),
+      collections, shlokas: exportShlokas, texts: textEntries
     };
-
     const json = JSON.stringify(backup);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -693,11 +738,8 @@ async function exportBackup() {
     const dateStr = new Date().toISOString().slice(0, 10);
     a.href = url;
     a.download = `shloka-tutor-backup-${dateStr}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
     status.textContent = `Backup downloaded (${collections.length} collection(s), ${exportShlokas.length} recording(s)).`;
     status.classList.remove('empty');
   } catch (e) {
@@ -713,44 +755,25 @@ async function importBackup(event) {
   const status = document.getElementById('backupStatus');
   status.textContent = 'Reading backup file...';
   status.classList.add('empty');
-
   try {
     const text = await file.text();
     const backup = JSON.parse(text);
-
     if (!backup || backup.app !== 'shloka-tutor' || !Array.isArray(backup.collections)) {
       status.textContent = 'That file does not look like a Shloka Tutor backup.';
       status.classList.add('empty');
       return;
     }
-
     const replace = confirm('Import this backup? This will add/overwrite collections, audio, and text with the same names/IDs as in the backup. Existing data not in the backup is kept.');
-    if (!replace) {
-      status.textContent = 'Import cancelled.';
-      status.classList.add('empty');
-      return;
-    }
-
-    for (const col of backup.collections) {
-      await dbPut('collections', col);
-    }
-
+    if (!replace) { status.textContent = 'Import cancelled.'; return; }
+    for (const col of backup.collections) { await dbPut('collections', col); }
     for (const entry of backup.shlokas || []) {
       const blob = base64ToBlob(entry.base64, entry.mimeType);
       await dbPut('shlokas', {
-        key: entry.key,
-        collectionId: entry.collectionId,
-        shlokaNum: entry.shlokaNum,
-        fileName: entry.fileName,
-        blob: blob,
-        segments: entry.segments
+        key: entry.key, collectionId: entry.collectionId,
+        shlokaNum: entry.shlokaNum, fileName: entry.fileName, blob, segments: entry.segments
       });
     }
-
-    for (const entry of backup.texts || []) {
-      await dbPut('texts', entry);
-    }
-
+    for (const entry of backup.texts || []) { await dbPut('texts', entry); }
     status.textContent = `Import complete: ${backup.collections.length} collection(s), ${(backup.shlokas || []).length} recording(s) restored.`;
     status.classList.remove('empty');
     await renderCollectionList();
@@ -759,24 +782,44 @@ async function importBackup(event) {
     status.textContent = 'Could not read that backup file. It may be corrupted or from an incompatible version.';
     status.classList.add('empty');
   }
-
   document.getElementById('importFile').value = '';
 }
 
 // ===================================================================
 // Tutor engine state
 // ===================================================================
-let shlokas = {}; // shlokaNum -> { fileName, audioBuffer, segments, durationSec }
-let shlokaTexts = {}; // shlokaNum -> { sanskrit, english }
+let shlokas = {};
+let shlokaTexts = {};
 let audioCtx = null;
 let currentShlokaNum = null;
 let currentSegmentIdx = 0;
-let cycleStep = 0; // 0 = listen, 1-3 = your turn repeats
+let cycleStep = 0;       // 0 = listen, 1+ = repeat turns
 let timer = null;
 let isRunning = false;
 let isPaused = false;
 let activeSource = null;
 let sessionStartShloka = 1;
+
+// Practice mode: 'split' | 'line' | 'shloka' | 'full'
+let practiceMode = 'split';
+// Phase within 'full' sequence: 1=split, 2=line, 3=shloka
+let fullPhase = 1;
+
+const MODE_DESCRIPTIONS = {
+  split:  'Split: each segment, repeat twice',
+  line:   'Line: each full segment/line, repeat once',
+  shloka: 'Shloka: full shloka plays, repeat once',
+  full:   'Full sequence: split → line → shloka in order'
+};
+
+function setMode(mode) {
+  practiceMode = mode;
+  ['split','line','shloka','full'].forEach(m => {
+    document.getElementById('mode' + m.charAt(0).toUpperCase() + m.slice(1))
+      .classList.toggle('active', m === mode);
+  });
+  document.getElementById('modeDesc').textContent = MODE_DESCRIPTIONS[mode];
+}
 
 const paceSettings = {
   slow:   { repeatSeconds: 4 },
@@ -787,7 +830,7 @@ const paceSettings = {
 const sensitivityLabels = { 1: 'high (more segments)', 2: 'medium', 3: 'low (fewer segments)' };
 const sensitivityThresholds = { 1: 0.02, 2: 0.04, 3: 0.08 };
 const sensitivityMinSilence = { 1: 0.15, 2: 0.25, 3: 0.35 };
-const SHORT_SEGMENT_THRESHOLD = 0.6; // seconds — segments shorter than this (e.g. standalone "Om") skip the repeat cycle
+const SHORT_SEGMENT_THRESHOLD = 0.6;
 
 let mediaRecorder = null;
 let micStream = null;
@@ -795,15 +838,12 @@ let recordedChunks = [];
 let micPermissionGranted = false;
 
 function getAudioContext() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
 
 function normalizeFilename(name) {
-  const base = name.replace(/\.[^/.]+$/, '');
-  return base.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return name.replace(/\.[^/.]+$/, '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
 function extractShlokaNumber(filename) {
@@ -840,11 +880,7 @@ async function loadCollectionData() {
       const arrayBuffer = await entry.blob.arrayBuffer();
       const ctx = getAudioContext();
       const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-      shlokas[entry.shlokaNum] = {
-        fileName: entry.fileName,
-        audioBuffer: audioBuffer,
-        segments: entry.segments
-      };
+      shlokas[entry.shlokaNum] = { fileName: entry.fileName, audioBuffer, segments: entry.segments };
     } catch (e) {
       console.error('Failed to decode saved audio for shloka', entry.shlokaNum, e);
     }
@@ -860,7 +896,6 @@ async function loadCollectionData() {
   }
   renderShlokaList();
 
-  // Load saved text
   const textEntry = await dbGet('texts', currentCollection.id);
   const textStatus = document.getElementById('textStatus');
   if (textEntry && textEntry.shlokaTexts) {
@@ -887,13 +922,11 @@ async function handleAudioFiles(event) {
     f.type.startsWith('audio/') || /\.(mp3|wav|m4a|ogg|aac|flac|amr|3gp|opus|wma)$/i.test(f.name)
   );
   const status = document.getElementById('uploadStatus');
-
   if (files.length === 0) {
     status.textContent = 'No audio files found in that selection.';
     status.classList.add('empty');
     return;
   }
-
   status.textContent = `Processing ${files.length} file(s)...`;
   status.classList.add('empty');
 
@@ -906,23 +939,12 @@ async function handleAudioFiles(event) {
       const ctx = getAudioContext();
       const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
       const segments = detectSegments(audioBuffer);
-
-      shlokas[shlokaNum] = {
-        fileName: file.name,
-        audioBuffer: audioBuffer,
-        segments: segments
-      };
-
-      // Persist to IndexedDB (store the original file blob + computed segments)
+      shlokas[shlokaNum] = { fileName: file.name, audioBuffer, segments };
       await dbPut('shlokas', {
         key: `${currentCollection.id}:${shlokaNum}`,
         collectionId: currentCollection.id,
-        shlokaNum: shlokaNum,
-        fileName: file.name,
-        blob: file,
-        segments: segments
+        shlokaNum, fileName: file.name, blob: file, segments
       });
-
       processed++;
     } catch (e) {
       console.error('Failed to process', file.name, e);
@@ -939,15 +961,9 @@ async function handleAudioFiles(event) {
   }
 
   renderShlokaList();
-  await renderCollectionListIfHome();
   document.getElementById('audioUpload').value = '';
 }
 
-async function renderCollectionListIfHome() {
-  // no-op when in tutor view; collection list refreshes when returning home
-}
-
-// Detect segments by finding gaps of low amplitude (silence) in the audio buffer
 function detectSegments(audioBuffer) {
   const sensitivity = document.getElementById('sensitivitySlider').value;
   const threshold = sensitivityThresholds[sensitivity];
@@ -957,29 +973,23 @@ function detectSegments(audioBuffer) {
   const sampleRate = audioBuffer.sampleRate;
   const duration = audioBuffer.duration;
 
-  const windowSize = Math.floor(sampleRate * 0.02); // 20ms windows
+  const windowSize = Math.floor(sampleRate * 0.02);
   const numWindows = Math.floor(data.length / windowSize);
   const energies = new Array(numWindows);
   let maxEnergy = 0;
   for (let i = 0; i < numWindows; i++) {
     let sum = 0;
     const start = i * windowSize;
-    for (let j = 0; j < windowSize; j++) {
-      const s = data[start + j];
-      sum += s * s;
-    }
+    for (let j = 0; j < windowSize; j++) { const s = data[start + j]; sum += s * s; }
     const rms = Math.sqrt(sum / windowSize);
     energies[i] = rms;
     if (rms > maxEnergy) maxEnergy = rms;
   }
 
-  if (maxEnergy === 0) {
-    return [{ start: 0, end: duration, skipRepeat: false }];
-  }
+  if (maxEnergy === 0) return [{ start: 0, end: duration, skipRepeat: false }];
 
   const silenceThreshold = maxEnergy * threshold;
   const minSilenceWindows = Math.ceil((minSilenceSec * 1000) / 20);
-
   const isSilent = energies.map(e => e < silenceThreshold);
   const gapCenters = [];
   let runStart = -1;
@@ -989,43 +999,30 @@ function detectSegments(audioBuffer) {
     } else {
       if (runStart !== -1) {
         const runLength = i - runStart;
-        if (runLength >= minSilenceWindows) {
-          gapCenters.push(Math.floor((runStart + i) / 2));
-        }
+        if (runLength >= minSilenceWindows) gapCenters.push(Math.floor((runStart + i) / 2));
         runStart = -1;
       }
     }
   }
-  if (runStart !== -1) {
-    const runLength = isSilent.length - runStart;
-    if (runLength >= minSilenceWindows) {
-      gapCenters.push(Math.floor((runStart + isSilent.length) / 2));
-    }
+  if (runStart !== -1 && (isSilent.length - runStart) >= minSilenceWindows) {
+    gapCenters.push(Math.floor((runStart + isSilent.length) / 2));
   }
 
   const windowDuration = windowSize / sampleRate;
   const boundaries = [0, ...gapCenters.map(c => c * windowDuration), duration];
-
   const segments = [];
   for (let i = 0; i < boundaries.length - 1; i++) {
-    const start = boundaries[i];
-    const end = boundaries[i + 1];
-    if (end - start > 0.1) {
-      segments.push({ start, end, skipRepeat: (end - start) < SHORT_SEGMENT_THRESHOLD });
-    }
+    const start = boundaries[i], end = boundaries[i + 1];
+    if (end - start > 0.1) segments.push({ start, end, skipRepeat: (end - start) < SHORT_SEGMENT_THRESHOLD });
   }
-
   return segments.length > 0 ? segments : [{ start: 0, end: duration, skipRepeat: false }];
 }
 
 function renderShlokaList() {
   const list = document.getElementById('shlokaList');
   const loaded = Object.keys(shlokas).map(n => parseInt(n, 10)).sort((a, b) => a - b);
-  if (loaded.length === 0) {
-    list.innerHTML = '';
-    return;
-  }
   list.innerHTML = '';
+  if (loaded.length === 0) return;
   loaded.forEach(num => {
     const s = shlokas[num];
     const item = document.createElement('div');
@@ -1046,8 +1043,7 @@ async function removeShloka(num) {
     const loaded = Object.keys(shlokas).map(n => parseInt(n, 10)).sort((a, b) => a - b);
     const status = document.getElementById('uploadStatus');
     if (loaded.length === 0) {
-      status.textContent = 'No audio uploaded yet.';
-      status.classList.add('empty');
+      status.textContent = 'No audio uploaded yet.'; status.classList.add('empty');
     } else {
       status.textContent = `Loaded shlokas: ${loaded.join(', ')}.`;
     }
@@ -1067,7 +1063,6 @@ async function handleTextFile(event) {
   try {
     let rawText = '';
     const ext = file.name.toLowerCase().split('.').pop();
-
     if (ext === 'txt') {
       rawText = await file.text();
     } else if (ext === 'docx') {
@@ -1078,34 +1073,29 @@ async function handleTextFile(event) {
       rawText = await extractPdfText(file);
     } else {
       status.textContent = 'Unsupported file type. Please upload .txt, .docx, or .pdf.';
-      status.classList.add('empty');
       return;
     }
 
     const parsed = parseShlokaText(rawText);
     const count = Object.keys(parsed).length;
-
     if (count === 0) {
       status.textContent = 'Could not find any numbered shlokas in that document. Make sure each shloka starts with its number (e.g. "1.", "Shloka 1", or "॥1॥").';
-      status.classList.add('empty');
       return;
     }
 
     shlokaTexts = parsed;
     await dbPut('texts', { collectionId: currentCollection.id, fileName: file.name, shlokaTexts: parsed });
-
     status.textContent = `Text loaded: ${count} shloka(s) found, from ${escapeHtml(file.name)}.`;
     status.classList.remove('empty');
     renderTextPreview();
     renderShlokaList();
     setPositionLabel();
-    updateShlokaTextDisplay();
+    updateVerseBanner();
   } catch (e) {
     console.error('Failed to parse text file', e);
     status.textContent = 'Could not read that document. Please try a different file or format.';
     status.classList.add('empty');
   }
-
   document.getElementById('textUpload').value = '';
 }
 
@@ -1117,21 +1107,16 @@ async function extractPdfText(file) {
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    const pageText = content.items.map(item => item.str).join(' ');
-    text += pageText + '\n';
+    text += content.items.map(item => item.str).join(' ') + '\n';
   }
   return text;
 }
 
-// Parse raw text into { shlokaNum: { sanskrit, english } }
-// Looks for markers like "1.", "Shloka 1", "Sloka 1", "Verse 1", "॥ 1 ॥", "(1)" at the start of a block.
 function parseShlokaText(rawText) {
   const lines = rawText.split(/\r?\n/).map(l => l.trim());
   const markerRegex = /^(?:shloka|sloka|verse)?\s*\(?\s*॥?\s*(\d{1,4})\s*॥?\s*\)?[\.\):\-]?\s*$|^(?:shloka|sloka|verse)\s+(\d{1,4})\b[\.\):\-]?\s*(.*)$|^॥?\s*(\d{1,4})\s*॥\s*(.*)$|^(\d{1,4})[\.\):]\s+(.*)$/i;
-
-  const blocks = []; // {num, lines: []}
+  const blocks = [];
   let current = null;
-
   for (const line of lines) {
     if (!line) continue;
     const m = line.match(markerRegex);
@@ -1143,9 +1128,7 @@ function parseShlokaText(rawText) {
       if (trailing) current.lines.push(trailing);
       continue;
     }
-    if (current) {
-      current.lines.push(line);
-    }
+    if (current) current.lines.push(line);
   }
   if (current) blocks.push(current);
 
@@ -1154,45 +1137,29 @@ function parseShlokaText(rawText) {
     if (!block.num) continue;
     const fullText = block.lines.join('\n').trim();
     if (!fullText) continue;
-
-    // Try to split Sanskrit (Devanagari) vs English/transliteration
-    const devanagariLines = [];
-    const otherLines = [];
+    const devanagariLines = [], otherLines = [];
     for (const l of block.lines) {
-      if (/[\u0900-\u097F]/.test(l)) {
-        devanagariLines.push(l);
-      } else {
-        otherLines.push(l);
-      }
+      if (/[ऀ-ॿ]/.test(l)) devanagariLines.push(l);
+      else otherLines.push(l);
     }
-
     let sanskrit, english;
     if (devanagariLines.length > 0 && otherLines.length > 0) {
-      sanskrit = devanagariLines.join('\n');
-      english = otherLines.join('\n');
+      sanskrit = devanagariLines.join('\n'); english = otherLines.join('\n');
     } else {
-      // No clear split — show everything as the main text
-      sanskrit = fullText;
-      english = '';
+      sanskrit = fullText; english = '';
     }
-
     result[block.num] = { sanskrit, english };
   }
-
   return result;
 }
 
 function renderTextPreview() {
   const list = document.getElementById('textPreviewList');
   const nums = Object.keys(shlokaTexts).map(n => parseInt(n, 10)).sort((a, b) => a - b);
-  if (nums.length === 0) {
-    list.classList.add('hidden');
-    list.innerHTML = '';
-    return;
-  }
+  if (nums.length === 0) { list.classList.add('hidden'); list.innerHTML = ''; return; }
   list.classList.remove('hidden');
   list.innerHTML = '';
-  const preview = nums.slice(0, 50); // avoid huge DOM for very large docs
+  const preview = nums.slice(0, 50);
   preview.forEach(num => {
     const t = shlokaTexts[num];
     const snippet = (t.sanskrit || t.english || '').split('\n')[0].slice(0, 40);
@@ -1209,19 +1176,33 @@ function renderTextPreview() {
   }
 }
 
-function updateShlokaTextDisplay() {
-  const box = document.getElementById('shlokaTextBox');
-  const sanskritEl = document.getElementById('sanskritText');
-  const englishEl = document.getElementById('englishText');
-
+// ===================================================================
+// Verse banner — shows current shloka text at the top
+// ===================================================================
+function updateVerseBanner(activeSegIdx) {
+  const banner = document.getElementById('verseBanner');
   if (currentShlokaNum === null || !shlokaTexts[currentShlokaNum]) {
-    box.classList.add('hidden');
+    banner.classList.add('hidden');
     return;
   }
   const t = shlokaTexts[currentShlokaNum];
-  sanskritEl.textContent = t.sanskrit || '';
-  englishEl.textContent = t.english || '';
-  box.classList.remove('hidden');
+  banner.classList.remove('hidden');
+  document.getElementById('verseBannerLabel').textContent = `Shloka ${currentShlokaNum}`;
+
+  // Split Sanskrit into lines and highlight the active one if provided
+  const sanskritLines = (t.sanskrit || '').split('\n');
+  const sanskritEl = document.getElementById('verseBannerSanskrit');
+  if (activeSegIdx !== undefined && activeSegIdx >= 0 && activeSegIdx < sanskritLines.length) {
+    sanskritEl.innerHTML = sanskritLines.map((l, i) =>
+      i === activeSegIdx
+        ? `<span class="active-line">${escapeHtml(l)}</span>`
+        : escapeHtml(l)
+    ).join('\n');
+  } else {
+    sanskritEl.textContent = t.sanskrit || '';
+  }
+
+  document.getElementById('verseBannerEnglish').textContent = t.english || '';
 }
 
 // ===================================================================
@@ -1240,12 +1221,18 @@ function setStatus(text, className, countdown) {
 
 function setPositionLabel() {
   const label = document.getElementById('positionLabel');
-  if (currentShlokaNum === null) {
-    label.textContent = 'Not started';
-    return;
+  if (currentShlokaNum === null) { label.textContent = 'Not started'; return; }
+  const shloka = shlokas[currentShlokaNum];
+  if (!shloka) { label.textContent = `Shloka ${currentShlokaNum}`; return; }
+
+  const effectiveMode = practiceMode === 'full' ? ['split','line','shloka'][fullPhase - 1] : practiceMode;
+  if (effectiveMode === 'shloka') {
+    label.textContent = `Shloka ${currentShlokaNum}`;
+  } else {
+    const total = shloka.segments.length;
+    label.textContent = `Shloka ${currentShlokaNum} — Segment ${currentSegmentIdx + 1} of ${total}` +
+      (practiceMode === 'full' ? ` (phase ${fullPhase}/3)` : '');
   }
-  const total = shlokas[currentShlokaNum].segments.length;
-  label.textContent = `Shloka ${currentShlokaNum} — Name ${currentSegmentIdx + 1} of ${total}`;
 }
 
 function clearTimer() {
@@ -1261,9 +1248,7 @@ function stopActiveSource() {
 
 function findNextLoadedShloka(fromNum) {
   const loaded = Object.keys(shlokas).map(n => parseInt(n, 10)).sort((a, b) => a - b);
-  for (const n of loaded) {
-    if (n > fromNum) return n;
-  }
+  for (const n of loaded) { if (n > fromNum) return n; }
   return null;
 }
 
@@ -1274,7 +1259,7 @@ async function ensureMicAccess() {
     micPermissionGranted = true;
     return true;
   } catch (e) {
-    console.warn('Microphone access denied or unavailable', e);
+    console.warn('Microphone access denied', e);
     micPermissionGranted = false;
     return false;
   }
@@ -1285,67 +1270,38 @@ function startRecording() {
   try {
     recordedChunks = [];
     mediaRecorder = new MediaRecorder(micStream);
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data && e.data.size > 0) recordedChunks.push(e.data);
-    };
+    mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunks.push(e.data); };
     mediaRecorder.start();
-  } catch (e) {
-    console.warn('Could not start recording', e);
-    mediaRecorder = null;
-  }
+  } catch (e) { console.warn('Could not start recording', e); mediaRecorder = null; }
 }
 
 function stopRecordingAndPlayback(callback) {
-  if (!mediaRecorder || mediaRecorder.state === 'inactive') {
-    callback();
-    return;
-  }
+  if (!mediaRecorder || mediaRecorder.state === 'inactive') { callback(); return; }
   mediaRecorder.onstop = () => {
-    if (recordedChunks.length === 0) {
-      callback();
-      return;
-    }
+    if (recordedChunks.length === 0) { callback(); return; }
     const blob = new Blob(recordedChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
     const url = URL.createObjectURL(blob);
     const playback = new Audio(url);
     setStatus('🔁 Playing back what you said...', 'repeat');
-    playback.onended = () => {
-      URL.revokeObjectURL(url);
-      callback();
-    };
-    playback.onerror = () => {
-      URL.revokeObjectURL(url);
-      callback();
-    };
-    playback.play().catch(() => {
-      URL.revokeObjectURL(url);
-      callback();
-    });
+    playback.onended = () => { URL.revokeObjectURL(url); callback(); };
+    playback.onerror = () => { URL.revokeObjectURL(url); callback(); };
+    playback.play().catch(() => { URL.revokeObjectURL(url); callback(); });
   };
-  try {
-    mediaRecorder.stop();
-  } catch (e) {
-    callback();
-  }
+  try { mediaRecorder.stop(); } catch (e) { callback(); }
 }
 
 async function startSession() {
   if (isRunning) return;
-
   const loaded = Object.keys(shlokas).map(n => parseInt(n, 10)).sort((a, b) => a - b);
-  if (loaded.length === 0) {
-    setStatus('Please upload at least one shloka recording first.', 'idle');
-    return;
-  }
+  if (loaded.length === 0) { setStatus('Please upload at least one shloka recording first.', 'idle'); return; }
 
   const micOk = await ensureMicAccess();
   if (!micOk) {
-    setStatus('Microphone access was not granted — continuing without playback of your repetitions. You can allow microphone access and restart to enable this.', 'idle');
+    setStatus('Microphone access was not granted — continuing without playback of your repetitions.', 'idle');
     await new Promise(r => setTimeout(r, 1800));
   }
 
   sessionStartShloka = parseInt(document.getElementById('startShlokaInput').value, 10) || 1;
-
   let startNum = shlokas[sessionStartShloka] ? sessionStartShloka : null;
   if (startNum === null) {
     startNum = loaded.find(n => n >= sessionStartShloka);
@@ -1355,6 +1311,7 @@ async function startSession() {
   currentShlokaNum = startNum;
   currentSegmentIdx = 0;
   cycleStep = 0;
+  fullPhase = 1;
   isRunning = true;
   isPaused = false;
 
@@ -1364,7 +1321,7 @@ async function startSession() {
   document.getElementById('pauseBtn').textContent = 'Pause';
 
   setPositionLabel();
-  updateShlokaTextDisplay();
+  updateVerseBanner(0);
   runStep();
 }
 
@@ -1375,24 +1332,15 @@ function restartSession() {
     mediaRecorder.onstop = null;
     try { mediaRecorder.stop(); } catch (e) {}
   }
-  isRunning = false;
-  isPaused = false;
-  currentShlokaNum = null;
-  currentSegmentIdx = 0;
-  cycleStep = 0;
+  isRunning = false; isPaused = false;
+  currentShlokaNum = null; currentSegmentIdx = 0; cycleStep = 0; fullPhase = 1;
   const startBtn = document.getElementById('startBtn');
   const pauseBtn = document.getElementById('pauseBtn');
-  if (startBtn) {
-    startBtn.disabled = false;
-    startBtn.textContent = 'Start';
-  }
-  if (pauseBtn) {
-    pauseBtn.disabled = true;
-    pauseBtn.textContent = 'Pause';
-  }
+  if (startBtn) { startBtn.disabled = false; startBtn.textContent = 'Start'; }
+  if (pauseBtn) { pauseBtn.disabled = true; pauseBtn.textContent = 'Pause'; }
   setStatus('Upload audio for one or more shlokas below, then press Start.', 'idle');
   setPositionLabel();
-  updateShlokaTextDisplay();
+  updateVerseBanner();
 }
 
 function togglePause() {
@@ -1400,11 +1348,9 @@ function togglePause() {
   isPaused = !isPaused;
   const btn = document.getElementById('pauseBtn');
   if (isPaused) {
-    clearTimer();
-    stopActiveSource();
+    clearTimer(); stopActiveSource();
     if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.onstop = null;
-      try { mediaRecorder.stop(); } catch (e) {}
+      mediaRecorder.onstop = null; try { mediaRecorder.stop(); } catch (e) {}
     }
     btn.textContent = 'Resume';
     setStatus('⏸ Paused', 'pause');
@@ -1414,6 +1360,7 @@ function togglePause() {
   }
 }
 
+// Play a specific segment
 function playSegment(shlokaNum, segIdx, onEnded) {
   const ctx = getAudioContext();
   const shloka = shlokas[shlokaNum];
@@ -1423,25 +1370,69 @@ function playSegment(shlokaNum, segIdx, onEnded) {
   source.connect(ctx.destination);
   activeSource = source;
   const duration = Math.max(0.05, seg.end - seg.start);
-  source.onended = () => {
-    if (activeSource === source) activeSource = null;
-    onEnded();
-  };
+  source.onended = () => { if (activeSource === source) activeSource = null; onEnded(); };
   source.start(0, seg.start, duration);
+}
+
+// Play the entire shloka from first segment start to last segment end
+function playFullShloka(shlokaNum, onEnded) {
+  const ctx = getAudioContext();
+  const shloka = shlokas[shlokaNum];
+  const segs = shloka.segments;
+  const start = segs[0].start;
+  const end = segs[segs.length - 1].end;
+  const source = ctx.createBufferSource();
+  source.buffer = shloka.audioBuffer;
+  source.connect(ctx.destination);
+  activeSource = source;
+  const duration = Math.max(0.05, end - start);
+  source.onended = () => { if (activeSource === source) activeSource = null; onEnded(); };
+  source.start(0, start, duration);
+}
+
+// Return the effective sub-mode for the current step
+function effectiveSubMode() {
+  if (practiceMode !== 'full') return practiceMode;
+  return ['split', 'line', 'shloka'][fullPhase - 1];
+}
+
+// How many repeats for this mode
+function repeatCount(subMode) {
+  return subMode === 'split' ? 2 : 1;
 }
 
 function runStep() {
   if (isPaused || !isRunning) return;
   clearTimer();
   setPositionLabel();
-  updateShlokaTextDisplay();
 
+  const subMode = effectiveSubMode();
   const shloka = shlokas[currentShlokaNum];
   const totalSegs = shloka.segments.length;
+
+  // ── SHLOKA mode: play entire shloka, then 1 repeat ──
+  if (subMode === 'shloka') {
+    updateVerseBanner(); // highlight nothing
+    if (cycleStep === 0) {
+      setStatus(`🎧 Listen — Shloka ${currentShlokaNum} (full)`, 'listen');
+      playFullShloka(currentShlokaNum, () => {
+        if (isPaused || !isRunning) return;
+        cycleStep = 1;
+        runStep();
+      });
+    } else {
+      runRepeatTurn(subMode, () => advanceSegment());
+    }
+    return;
+  }
+
+  // ── SPLIT / LINE mode: segment by segment ──
   const seg = shloka.segments[currentSegmentIdx];
+  updateVerseBanner(currentSegmentIdx);
 
   if (cycleStep === 0) {
-    setStatus(`🎧 Listen — Shloka ${currentShlokaNum}, Name ${currentSegmentIdx + 1} of ${totalSegs}`, 'listen');
+    const modeTag = subMode === 'split' ? 'Split' : 'Line';
+    setStatus(`🎧 Listen — Shloka ${currentShlokaNum}, Segment ${currentSegmentIdx + 1} of ${totalSegs} (${modeTag})`, 'listen');
     playSegment(currentShlokaNum, currentSegmentIdx, () => {
       if (isPaused || !isRunning) return;
       if (seg.skipRepeat) {
@@ -1451,59 +1442,92 @@ function runStep() {
         runStep();
       }
     });
-  } else if (cycleStep >= 1 && cycleStep <= 3) {
-    const pace = getPace();
-    const count = pace.repeatSeconds;
-    setStatus(`🗣️ Your turn (${cycleStep}/3)`, 'repeat', count);
-    startRecording();
-    let remaining = count;
-    timer = setInterval(() => {
-      if (isPaused) return;
-      remaining--;
-      const el = document.getElementById('countdownNum');
-      if (el) el.textContent = remaining;
-      if (remaining <= 0) {
-        clearInterval(timer);
-        timer = null;
-        stopRecordingAndPlayback(() => {
-          if (isPaused || !isRunning) return;
-          if (cycleStep < 3) {
-            cycleStep++;
-            runStep();
-          } else {
-            advanceSegment();
-          }
-        });
-      }
-    }, 1000);
+  } else {
+    const maxRepeats = repeatCount(subMode);
+    if (cycleStep <= maxRepeats) {
+      runRepeatTurn(subMode, () => {
+        if (cycleStep < maxRepeats) {
+          cycleStep++;
+          runStep();
+        } else {
+          advanceSegment();
+        }
+      });
+    }
   }
+}
+
+function runRepeatTurn(subMode, onDone) {
+  const maxRepeats = subMode === 'shloka' ? 1 : repeatCount(subMode);
+  const pace = getPace();
+  const count = pace.repeatSeconds;
+  const label = subMode === 'shloka' ? '1/1' : `${cycleStep}/${maxRepeats}`;
+  setStatus(`🗣️ Your turn (${label})`, 'repeat', count);
+  startRecording();
+  let remaining = count;
+  timer = setInterval(() => {
+    if (isPaused) return;
+    remaining--;
+    const el = document.getElementById('countdownNum');
+    if (el) el.textContent = remaining;
+    if (remaining <= 0) {
+      clearInterval(timer); timer = null;
+      stopRecordingAndPlayback(() => {
+        if (isPaused || !isRunning) return;
+        onDone();
+      });
+    }
+  }, 1000);
 }
 
 function advanceSegment() {
   if (isPaused || !isRunning) return;
-  const shloka = shlokas[currentShlokaNum];
-  currentSegmentIdx++;
   cycleStep = 0;
+  const subMode = effectiveSubMode();
+  const shloka = shlokas[currentShlokaNum];
 
+  if (subMode === 'shloka') {
+    // Whole-shloka mode: one shloka = one "segment"
+    advanceToNextShloka();
+    return;
+  }
+
+  currentSegmentIdx++;
   if (currentSegmentIdx >= shloka.segments.length) {
-    const nextNum = findNextLoadedShloka(currentShlokaNum);
-    if (nextNum === null) {
-      finishSession();
-      return;
+    // All segments of this shloka done in current sub-mode
+    if (practiceMode === 'full') {
+      if (fullPhase < 3) {
+        fullPhase++;
+        currentSegmentIdx = 0;
+        setStatus(`Moving to phase ${fullPhase} of 3...`, 'pause');
+        timer = setTimeout(runStep, 1200);
+        return;
+      }
     }
-    currentShlokaNum = nextNum;
-    currentSegmentIdx = 0;
-    setStatus(`Moving to Shloka ${currentShlokaNum}...`, 'pause');
-    updateShlokaTextDisplay();
-    timer = setTimeout(runStep, 1000);
+    // Move to next shloka
+    advanceToNextShloka();
   } else {
     runStep();
   }
 }
 
+function advanceToNextShloka() {
+  const nextNum = findNextLoadedShloka(currentShlokaNum);
+  if (nextNum === null) {
+    finishSession();
+    return;
+  }
+  currentShlokaNum = nextNum;
+  currentSegmentIdx = 0;
+  cycleStep = 0;
+  fullPhase = 1;
+  setStatus(`Moving to Shloka ${currentShlokaNum}...`, 'pause');
+  updateVerseBanner(0);
+  timer = setTimeout(runStep, 1000);
+}
+
 function finishSession() {
-  clearTimer();
-  stopActiveSource();
+  clearTimer(); stopActiveSource();
   isRunning = false;
   setStatus(`✅ Well done! You've completed all loaded shlokas (up to Shloka ${currentShlokaNum}).`, 'done');
   document.getElementById('startBtn').disabled = false;
@@ -1529,7 +1553,6 @@ function finishSession() {
   setPositionLabel();
 })();
 </script>
-
 
 </body>
 </html>
