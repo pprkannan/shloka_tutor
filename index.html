@@ -930,9 +930,14 @@ async function handleAudioFiles(event) {
   status.classList.add('empty');
 
   let processed = 0;
-  for (const file of files) {
-    const shlokaNum = extractShlokaNumber(file.name);
-    if (shlokaNum === null) continue;
+  for (let fi = 0; fi < files.length; fi++) {
+    const file = files[fi];
+    let shlokaNum = extractShlokaNumber(file.name);
+    // If no number found, assign sequentially starting from the highest existing + 1
+    if (shlokaNum === null) {
+      const existing = Object.keys(shlokas).map(n => parseInt(n, 10));
+      shlokaNum = existing.length > 0 ? Math.max(...existing) + 1 : 1;
+    }
     try {
       const arrayBuffer = await file.arrayBuffer();
       const ctx = getAudioContext();
@@ -947,11 +952,13 @@ async function handleAudioFiles(event) {
       processed++;
     } catch (e) {
       console.error('Failed to process', file.name, e);
+      status.textContent = `Could not decode "${file.name}" — make sure it is a valid audio file.`;
+      status.classList.add('empty');
     }
   }
 
   if (processed === 0) {
-    status.textContent = `Found ${files.length} audio file(s), but couldn't determine the shloka number from the filename(s). Name files like "shloka4.mp3".`;
+    status.textContent = `Could not process the uploaded file(s). Make sure they are valid audio files (mp3, m4a, wav, etc).`;
     status.classList.add('empty');
   } else {
     const loaded = Object.keys(shlokas).map(n => parseInt(n, 10)).sort((a, b) => a - b);
