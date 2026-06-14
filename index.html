@@ -837,7 +837,15 @@ let recordedChunks = [];
 let micPermissionGranted = false;
 
 function getAudioContext() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Auto-resume if the browser suspends the context (tab switch, screen lock, etc.)
+    audioCtx.addEventListener('statechange', () => {
+      if (audioCtx.state === 'suspended' && isRunning && !isPaused) {
+        audioCtx.resume();
+      }
+    });
+  }
   return audioCtx;
 }
 
@@ -1382,7 +1390,7 @@ function togglePause() {
     setStatus('⏸ Paused', 'pause');
   } else {
     btn.textContent = 'Pause';
-    runStep();
+    getAudioContext().resume().then(() => runStep());
   }
 }
 
