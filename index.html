@@ -457,6 +457,12 @@
         Upload audio for one or more shlokas below, then press Start.
       </div>
 
+      <!-- Preview text for the selected shloka -->
+      <div id="shlokaPreviewBox" class="hidden" style="background:#fff8ec;border-radius:10px;padding:12px 14px;margin-bottom:14px;text-align:left;">
+        <div id="shlokaPreviewSanskrit" style="font-size:16px;color:#5a2e0a;line-height:1.75;white-space:pre-wrap;"></div>
+        <div id="shlokaPreviewEnglish" style="font-size:12px;color:#6b5440;line-height:1.6;white-space:pre-wrap;font-style:italic;margin-top:6px;"></div>
+      </div>
+
       <div class="controls">
         <button class="btn-primary" id="startBtn" onclick="startSession()">Start</button>
         <button class="btn-secondary" id="pauseBtn" onclick="togglePause()" disabled>Pause</button>
@@ -474,7 +480,7 @@
 
       <div class="setup-row">
         <label for="startShlokaInput">Start from shloka #</label>
-        <input type="number" id="startShlokaInput" min="1" value="1">
+        <input type="number" id="startShlokaInput" min="1" value="1" oninput="updateShlokaPreview()">
       </div>
       <div class="setup-row">
         <label for="paceSelect">Pace for "your turn" pauses:</label>
@@ -1090,6 +1096,7 @@ async function handleTextFile(event) {
     renderTextPreview();
     renderShlokaList();
     setPositionLabel();
+    updateShlokaPreview();
     updateVerseBanner();
   } catch (e) {
     console.error('Failed to parse text file', e);
@@ -1174,6 +1181,19 @@ function renderTextPreview() {
     more.innerHTML = `<span class="label">...and ${nums.length - preview.length} more</span>`;
     list.appendChild(more);
   }
+}
+
+// ===================================================================
+// Shloka preview — shows selected shloka text above Start button
+// ===================================================================
+function updateShlokaPreview() {
+  const num = parseInt(document.getElementById('startShlokaInput').value, 10);
+  const box = document.getElementById('shlokaPreviewBox');
+  if (!num || !shlokaTexts[num]) { box.classList.add('hidden'); return; }
+  const t = shlokaTexts[num];
+  document.getElementById('shlokaPreviewSanskrit').textContent = t.sanskrit || '';
+  document.getElementById('shlokaPreviewEnglish').textContent = t.english || '';
+  box.classList.remove('hidden');
 }
 
 // ===================================================================
